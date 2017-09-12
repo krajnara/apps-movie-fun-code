@@ -29,5 +29,18 @@
     <servlet-name>movieFun</servlet-name>
     <url-pattern>/moviefun/*</url-pattern>
   </servlet-mapping>
+
+  <servlet>
+    <servlet-name>HelloWeb</servlet-name>
+    <servlet-class>
+      org.springframework.web.servlet.DispatcherServlet
+    </servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>HelloWeb</servlet-name>
+    <url-pattern>*</url-pattern>
+  </servlet-mapping>
 </web-app>
 

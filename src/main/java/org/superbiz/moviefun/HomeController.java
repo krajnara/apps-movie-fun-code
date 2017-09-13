@@ -1,6 +1,15 @@
 package org.superbiz.moviefun;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.interceptor.DefaultTransactionAttribute;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.superbiz.moviefun.albums.Album;
 import org.superbiz.moviefun.albums.AlbumFixtures;
@@ -19,6 +28,14 @@ public class HomeController {
     private final MovieFixtures movieFixtures;
     private final AlbumFixtures albumFixtures;
 
+    @Autowired
+    @Qualifier("movies-manager")
+    private PlatformTransactionManager movieManager;
+
+    @Autowired
+    @Qualifier("albums-manager")
+    private PlatformTransactionManager albumManager;
+
     public HomeController(MoviesBean moviesBean, AlbumsBean albumsBean, MovieFixtures movieFixtures, AlbumFixtures albumFixtures) {
         this.moviesBean = moviesBean;
         this.albumsBean = albumsBean;
@@ -33,12 +50,23 @@ public class HomeController {
 
     @GetMapping("/setup")
     public String setup(Map<String, Object> model) {
-        for (Movie movie : movieFixtures.load()) {
-            moviesBean.addMovie(movie);
+        System.out.println("Count of Movies : " + moviesBean.countAll());
+        if(moviesBean.countAll() == 0) {
+            TransactionStatus status = movieManager.getTransaction(null);
+            for (Movie movie : movieFixtures.load()) {
+                System.out.println("Adding movie : " + movie.getTitle());
+                moviesBean.addMovie(movie);
+            }
+
+            movieManager.commit(status);
         }
 
-        for (Album album : albumFixtures.load()) {
-            albumsBean.addAlbum(album);
+        if(albumsBean.countAll() == 0) {
+            TransactionStatus status = albumManager.getTransaction(null);
+            for (Album album : albumFixtures.load()) {
+                albumsBean.addAlbum(album);
+            }
+            albumManager.commit(status);
         }
 
         model.put("movies", moviesBean.getMovies());

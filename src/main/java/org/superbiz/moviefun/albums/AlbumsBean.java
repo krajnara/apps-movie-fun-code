@@ -21,16 +21,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.util.List;
 
 @Repository
 public class AlbumsBean {
 
-    @PersistenceContext
+    @PersistenceContext(unitName = "unit-albums")
     private EntityManager entityManager;
 
-    @Transactional
     public void addAlbum(Album album) {
         entityManager.persist(album);
     }
@@ -39,5 +40,14 @@ public class AlbumsBean {
         CriteriaQuery<Album> cq = entityManager.getCriteriaBuilder().createQuery(Album.class);
         cq.select(cq.from(Album.class));
         return entityManager.createQuery(cq).getResultList();
+    }
+
+
+    public int countAll() {
+        CriteriaQuery<Long> cq = entityManager.getCriteriaBuilder().createQuery(Long.class);
+        Root<Album> rt = cq.from(Album.class);
+        cq.select(entityManager.getCriteriaBuilder().count(rt));
+        TypedQuery<Long> q = entityManager.createQuery(cq);
+        return (q.getSingleResult()).intValue();
     }
 }
